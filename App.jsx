@@ -111,6 +111,13 @@ export default function App() {
     handleAppLaunch();
   }, []);
 
+  useEffect(() => {
+    console.log('Authentication Check:', {
+      isAuthenticated,
+      isPinLogin,
+    });
+  }, [isAuthenticated, isPinLogin]);
+
   if (isLoading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
