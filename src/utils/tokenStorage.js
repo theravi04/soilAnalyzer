@@ -33,7 +33,7 @@ export const getTokens = async () => {
 export const clearTokens = async () => {
   try {
     await AsyncStorage.removeItem('pinToken');
-    await AsyncStorage.removeItem('passwordToken');
+    // await AsyncStorage.removeItem('passwordToken');
   } catch (error) {
     console.error('Error clearing tokens:', error);
   }

@@ -24,7 +24,7 @@ const PinLogInScreen = ({navigation}) => {
 
     if (!passwordToken) {
       alert('Session expired. Please log in with email and password.');
-      navigation.navigate('Home');
+      navigation.navigate('Login');
       return;
     }
 

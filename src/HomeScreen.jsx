@@ -18,7 +18,7 @@ const HomeScreen = ({navigation}) => {
   const handleLogout = async () => {
     console.log('Navigation state:', navigation.getState());
     await clearTokens();
-    navigation.navigate('Login');
+    navigation.navigate('PinLogIn');
     // console.log('Navigation state:', navigation.getState());
     // await clearTokens();
     // // navigation.navigate('Login');

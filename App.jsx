@@ -1,8 +1,3 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable curly */
-/* eslint-disable react/no-unstable-nested-components */
-/* eslint-disable react-native/no-inline-styles */
-
 import React, {useState, useEffect} from 'react';
 import {View, ActivityIndicator} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
@@ -51,8 +46,8 @@ function MainTabNavigator() {
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#ff6600', // Color of active icon
-        tabBarInactiveTintColor: 'gray', // Color of inactive icons
+        tabBarActiveTintColor: '#ff6600',
+        tabBarInactiveTintColor: 'gray',
         tabBarStyle: {backgroundColor: '#fff', bottom: 0, height: 60},
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -65,58 +60,64 @@ function MainTabNavigator() {
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isPinLogin, setIsPinLogin] = useState(false);
+  const [isPinSet, setIsPinSet] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleAppLaunch = async () => {
-      const {pinToken, passwordToken} = await getTokens();
-      console.log("pinToken check:",pinToken);
-      console.log("passwordToken check:",passwordToken);
-      
-      if (passwordToken) {
-        try {
-          const response = await axios.post(
-            `${BASE_URL}/user/validate-token/password`,
-            {token: passwordToken},
-          );
-          if (response.status === 200) {
-            // set pin login true
-            setIsPinLogin(true);
-            setIsLoading(false);
-            return;
+      try {
+        const {pinToken, passwordToken} = await getTokens();
+        console.log("pinToken check:", pinToken);
+        console.log("passwordToken check:", passwordToken);
+        
+        if (passwordToken) {
+          try {
+            const response = await axios.post(
+              `${BASE_URL}/user/validate-token/password`,
+              {token: passwordToken},
+            );
+            if (response.status === 200) {
+              setIsAuthenticated(true);
+              
+              // Check if PIN is set
+              if (pinToken) {
+                try {
+                  const pinResponse = await axios.post(
+                    `${BASE_URL}/user/validate-token/pin`,
+                    {token: pinToken},
+                  );
+                  if (pinResponse.status === 200) {
+                    setIsPinSet(true);
+                  }
+                } catch {
+                  console.log('PIN token invalid.');
+                }
+              }
+              
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            console.log('Password token invalid.');
           }
-        } catch {
-          console.log('Password token invalid.');
         }
-
-      if (passwordToken && pinToken) {
-        try {
-          const response = await axios.post(
-            `${BASE_URL}/user/validate-token/pin`,
-            {token: pinToken},
-          );
-          if (response.status === 200) {
-            setIsAuthenticated(true);
-            setIsLoading(false);
-            return;
-          }
-        } catch {
-          console.log('PIN token invalid.');
-        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error during authentication check:', error);
+        setIsLoading(false);
       }
-      }
-      setIsLoading(false);
     };
+    
     handleAppLaunch();
   }, []);
 
   useEffect(() => {
     console.log('Authentication Check:', {
       isAuthenticated,
-      isPinLogin,
+      isPinSet,
     });
-  }, [isAuthenticated, isPinLogin]);
+  }, [isAuthenticated, isPinSet]);
 
   if (isLoading) {
     return (
@@ -127,15 +128,17 @@ export default function App() {
   }
 
   return (
-    //* one
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated && isPinLogin ? (
+        {isAuthenticated && isPinSet ? (
+          // Completely authenticated with PIN set
           <Stack.Screen name="Main" component={MainTabNavigator} />
+        ) : isAuthenticated && !isPinSet ? (
+          // Authenticated but PIN not set
+          <Stack.Screen name="PinLogIn" component={PinLogInScreen} />
         ) : (
-          <>
-            <Stack.Screen name="Auth" component={AuthNavigator} />
-          </>
+          // Not authenticated
+          <Stack.Screen name="Auth" component={AuthNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
